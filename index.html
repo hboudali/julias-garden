@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F0E8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Julia's Garden">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Julia's Garden</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F0E8; --surface:#FBFAF6; --card:#ECE8DE; --card2:#E4DFD3; --line:#DCD6C8;
+  --text:#33352D; --muted:#8B897D; --faint:#B3B0A4;
+  --green:#7DA26A; --green-d:#5E8450; --green-soft:#DCE6D2; --green-chip:#D3DEC7;
+  --orange:#D9774A; --star:#C46F4C; --danger:#B9564A; --danger-soft:#F6E8E5; --outer:#E7E3D9; --on-accent:#FFFFFF;
+  --radius:18px;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--outer);color:var(--text);font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.4}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+#app{max-width:640px;margin:0 auto;height:100%;background:var(--bg);position:relative;display:flex;flex-direction:column;overflow:hidden}
+@media (min-width:700px){#app{height:calc(100% - 48px);margin:24px auto;border-radius:28px;box-shadow:0 16px 50px rgba(40,40,30,.14)}}
+:focus-visible{outline:2.5px solid var(--green-d);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.scroll{flex:1;overflow-y:auto;padding:22px max(20px, env(safe-area-inset-right, 0px)) 28px max(20px, env(safe-area-inset-left, 0px));-webkit-overflow-scrolling:touch}
+h1{font-size:28px;font-weight:800;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:19px;font-weight:800;margin:0;letter-spacing:-.01em}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.loading{flex:1;display:grid;place-items:center;text-align:center;color:var(--muted)}
+.logo{width:64px;height:64px;border-radius:20px;background:var(--green-soft);display:grid;place-items:center;font-size:32px}
+.loading .logo{margin:0 auto 14px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.92);opacity:.7}}
+.banner{display:block;width:100%;text-align:left;background:var(--danger-soft);color:var(--danger);font-size:13px;font-weight:600;padding:10px 14px;border-radius:12px;margin-bottom:14px}
+.banner.soft{background:var(--green-soft);color:var(--green-d)}
+
+/* tab bar */
+.tabbar{display:flex;justify-content:space-around;border-top:1px solid var(--line);background:var(--surface);padding:8px 6px calc(8px + env(safe-area-inset-bottom, 0px))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--faint);flex:1;padding:4px 0}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--green-d)}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:var(--on-accent);font-weight:700;border-radius:999px;padding:15px 22px;width:100%;font-size:15.5px;transition:transform .1s,background .2s}
+.btn:active{transform:scale(.98)}
+.btn:hover{background:var(--green-d)}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn-line{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-line:hover{background:var(--card)}
+.btn-danger{background:var(--danger)}
+.btn-danger:hover{background:var(--danger);filter:brightness(.92)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.icon-btn{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;background:var(--surface);flex:none;font-size:20px;font-weight:700}
+.icon-btn svg{width:20px;height:20px}
+
+/* forms */
+.field{margin-top:16px}
+.field label,.ql{display:block;font-weight:700;font-size:14px;margin-bottom:8px}
+.input{width:100%;background:var(--card);border:1.5px solid transparent;border-radius:14px;padding:14px 15px;outline:none;transition:border .15s}
+.input:focus{border-color:var(--green)}
+.input::placeholder{color:var(--faint)}
+textarea.input{min-height:88px;resize:vertical}
+.err{color:var(--danger);font-size:13.5px;margin-top:10px;min-height:18px}
+
+/* avatar */
+.av{border-radius:50%;display:grid;place-items:center;flex:none;overflow:hidden;font-weight:800;color:var(--on-accent)}
+.av img{width:100%;height:100%;object-fit:cover}
+.av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:8px}
+.av-opt{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:24px;background:var(--card);border:2.5px solid transparent}
+.av-opt.on{border-color:var(--green-d)}
+.bg-opts{display:flex;gap:10px;flex-wrap:wrap}
+.bg-opt{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--surface);outline:2px solid transparent}
+.bg-opt.on{outline-color:var(--green-d)}
+.seg{display:flex;background:var(--card);border-radius:999px;padding:4px;gap:4px}
+.seg button{flex:1;border-radius:999px;padding:9px 6px;font-weight:700;font-size:13.5px;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.preview{display:flex;flex-direction:column;align-items:center;gap:8px;margin:18px 0 6px}
+
+/* today */
+.greet{color:var(--muted);font-weight:500}
+.hello{display:flex;align-items:center;gap:14px}
+.hero{margin-top:18px;border-radius:22px;padding:22px;color:var(--on-accent);background:linear-gradient(135deg,#9AA582,#7E8B68 60%,#6C7958);position:relative;overflow:hidden;min-height:150px}
+.hero::after{content:"";position:absolute;right:-40px;top:-30px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero p{font-size:19px;font-weight:700;margin:12px 0 18px;line-height:1.35;position:relative;z-index:1;text-wrap:pretty}
+.hero small{letter-spacing:.12em;font-size:11px;font-weight:700;opacity:.85}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 12px}
+.count{font-weight:700;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.chip-done{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;padding:12px;font-weight:600;font-size:14px;text-align:left;border:1.5px solid transparent;min-width:0}
+.chip-done.done{background:var(--green-soft);border-color:#C8D7BB}
+.chip-done .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--faint);display:grid;place-items:center;flex:none}
+.done .ck{background:var(--green);border-color:var(--green)}
+.ck svg{width:11px;height:11px;color:var(--on-accent)}
+
+/* trackers list */
+.tlist{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.trow{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:var(--radius);padding:14px;text-align:left;width:100%}
+.ticon{width:46px;height:46px;border-radius:14px;background:var(--surface);display:grid;place-items:center;font-size:22px;flex:none}
+.trow .t{font-weight:700}
+.trow .s{font-size:13px;color:var(--muted)}
+.trow .chev{margin-left:auto;color:var(--faint);display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;font-weight:700;color:var(--green-d);background:var(--green-soft);border-radius:999px;padding:3px 8px}
+
+/* wizard */
+.wiz-top{padding:18px max(20px, env(safe-area-inset-right, 0px)) 10px max(20px, env(safe-area-inset-left, 0px));background:var(--bg)}
+.wiz-top .row{display:flex;justify-content:space-between;align-items:center}
+.bar{height:6px;border-radius:9px;background:var(--card2);margin-top:10px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--green);border-radius:9px;transition:width .3s}
+.wiz-icon{width:56px;height:56px;border-radius:16px;background:var(--card);display:grid;place-items:center;font-size:28px}
+.wiz-foot{display:flex;gap:12px;padding:12px max(20px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));border-top:1px solid var(--line);background:var(--bg)}
+.q{margin-top:22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--card);border-radius:999px;padding:9px 15px;font-weight:600;font-size:14px;border:1.5px solid transparent;color:#5d5c52}
+.chip.on{background:var(--green-chip);border-color:#A9BF98;color:var(--text)}
+.scale{display:flex;flex-wrap:wrap;gap:8px}
+.scale button{width:46px;height:46px;border-radius:13px;background:var(--card);font-weight:700}
+.scale button.on{background:var(--green);color:var(--on-accent)}
+.lohi{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
+.stars{display:flex;gap:6px}
+.stars button svg{width:32px;height:32px;color:var(--star)}
+.with-unit{position:relative}
+.with-unit span{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px}
+.check{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:13px 14px;width:100%;text-align:left;font-weight:600;font-size:14px;margin-bottom:8px}
+.box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--faint);display:grid;place-items:center;flex:none;background:var(--surface)}
+.check.on .box{background:var(--green);border-color:var(--green)}
+.box svg{width:13px;height:13px;color:var(--on-accent)}
+.glass{display:flex;align-items:center;gap:16px}
+.glass .num{font-size:34px;font-weight:800;margin-left:auto;text-align:right;line-height:1;font-variant-numeric:tabular-nums}
+.glass .num small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.wbar{height:8px;border-radius:9px;background:var(--card2);margin:14px 0 10px;overflow:hidden}
+.wbar i{display:block;height:100%;background:var(--orange);border-radius:9px;transition:width .25s}
+.drops{display:flex;gap:10px}
+.drops svg{width:20px;height:20px;color:#9DB4C4}
+.drops .f svg{color:#5E93B8}
+.swatch{width:40px;height:40px;border-radius:50%;border:3px solid transparent;outline:2px solid transparent}
+.swatch.on{border-color:var(--bg);outline-color:var(--green-d)}
+
+/* history */
+.strip{display:flex;gap:8px;overflow-x:auto;margin:16px -20px 0;padding:2px 20px 6px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.day{flex:none;width:50px;border-radius:14px;background:var(--card);padding:8px 0;text-align:center;position:relative}
+.day small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.day b{font-size:17px;font-variant-numeric:tabular-nums}
+.day.on{background:var(--green);color:var(--on-accent)}
+.day.on small{color:#EAF1E3}
+.day .dot{position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--green)}
+.day.on .dot{background:var(--on-accent)}
+.hcard{background:var(--card);border-radius:var(--radius);padding:16px;margin-top:12px}
+.hcard .hd{display:flex;align-items:center;gap:10px;font-weight:800;margin-bottom:8px}
+.hcard .hd .ticon{width:36px;height:36px;font-size:18px;border-radius:11px}
+.kv{margin-top:8px}
+.kv small{display:block;color:var(--muted);font-size:12px}
+.kv div{font-weight:600;font-size:14px;white-space:pre-wrap;word-break:break-word}
+.empty{text-align:center;padding:40px 20px}
+.empty .art{width:130px;height:130px;margin:0 auto 18px;border-radius:28px;background:var(--card);display:grid;place-items:center}
+
+/* profile */
+.pcard{background:var(--card);border-radius:22px;padding:26px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pcard .av{margin-bottom:8px}
+.link{color:var(--green-d);font-weight:700;font-size:14px;margin-top:6px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stat{background:var(--card);border-radius:16px;padding:14px;text-align:center}
+.stat b{font-size:22px;display:block;font-variant-numeric:tabular-nums}
+.panel{border-radius:22px;padding:20px;margin-top:12px;background:var(--card)}
+.panel h3{margin:0 0 4px;font-size:17px;display:flex;align-items:center;gap:8px}
+.insight{background:var(--green-soft);border:1.5px solid #C8D7BB}
+.note{background:var(--surface);border-radius:14px;padding:14px;margin:14px 0 4px;font-size:14.5px;line-height:1.55}
+.confirm{background:var(--danger-soft);border-radius:14px;padding:14px;margin-top:12px;font-size:14px}
+.spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:var(--on-accent);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:var(--text);color:var(--on-accent);padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:9;animation:fade 2.4s forwards;white-space:nowrap}
+@keyframes fade{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+/* install screen */
+.install-hero{width:96px;height:96px;border-radius:24px;overflow:hidden;box-shadow:0 8px 24px rgba(60,80,40,.18)}
+.install-hero img{width:100%;height:100%;display:block}
+.why{background:var(--green-soft);border-radius:18px;padding:16px;margin-top:18px;font-size:14.5px;line-height:1.5}
+.steps{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:flex;gap:14px;align-items:center;background:var(--card);border-radius:16px;padding:14px;counter-increment:s;font-size:14.5px}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--green);color:var(--on-accent);font-weight:800;display:grid;place-items:center;flex:none}
+.ios-ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--surface);border:1px solid var(--line);vertical-align:middle;margin:0 2px;color:#2F7BF6}
+.ios-ico svg{width:17px;height:17px}
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1.5px dashed var(--line);border-radius:16px;padding:14px;margin-top:14px;font-size:14px}
+.skip{display:block;margin:14px auto 0;color:var(--muted);font-weight:600;font-size:14px;padding:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="restoreFile" class="sr" accept=".json,application/json" tabindex="-1" aria-hidden="true">
+<input type="file" id="photoFile" class="sr" accept="image/*" tabindex="-1" aria-hidden="true">
+<script>
+/* ============================================================
+   Julia's Garden — daily check-in (single file, no login).
+   Everything is saved in this browser (localStorage) on this device.
+   ============================================================ */
+const APP_NAME = "Julia's Garden";
+
+/* ---------- tracker definitions ---------- */
+const TRACKERS = [
+  {id:'sleep', name:'Sleep', emoji:'🌙', sub:'Rest & recharge', fields:[
+    {k:'bedtime', l:'Bedtime', t:'time'},
+    {k:'wake', l:'Wake-up time', t:'time'},
+    {k:'hours', l:'Total hours slept', t:'num', unit:'hrs', ph:'7'},
+    {k:'quality', l:'Sleep quality', t:'stars'},
+    {k:'menergy', l:'Morning energy level', t:'scale', max:5, lo:'Low', hi:'High'},
+    {k:'consistency', l:'Sleep consistency', t:'chips', opts:['On track','Improving','Irregular']},
+    {k:'notes', l:'Dreams, thoughts & improvements', t:'text', ph:'Anything on your mind about sleep…'}]},
+  {id:'water', name:'Water Intake', short:'Water', emoji:'💧', sub:'Stay hydrated', fields:[
+    {k:'glasses', l:'Glasses of water', t:'glasses', max:8},
+    {k:'morning', l:'Morning hydration habit', t:'check', text:'Drank water right after waking up'},
+    {k:'effect', l:'How hydration affected focus & mood', t:'text', ph:'I felt more focused when…'}]},
+  {id:'exercise', name:'Exercise', emoji:'🌱', sub:'Move your body', fields:[
+    {k:'type', l:'Exercise type', t:'multi', opts:['Walk','Run','Gym','Yoga','Sports','Cycling','Home workout','Rest day']},
+    {k:'duration', l:'Workout duration', t:'num', unit:'min', ph:'30'},
+    {k:'steps', l:'Steps / activity', t:'num', unit:'steps', ph:'5000'},
+    {k:'checklist', l:'Movement checklist', t:'checklist', opts:['Stretching','Warm-up','Cool-down','Stayed hydrated']},
+    {k:'energyAfter', l:'Energy after', t:'scale', max:5, lo:'Low', hi:'High'},
+    {k:'weeklyGoal', l:'Weekly exercise goal', t:'num', unit:'days', ph:'4'},
+    {k:'reflection', l:'Progress reflection', t:'text', ph:'How did your body feel?'}]},
+  {id:'mood', name:'Mood', emoji:'😊', sub:'How you feel', fields:[
+    {k:'rating', l:'Mood rating', t:'scale', max:10, lo:'Low', hi:'Great'},
+    {k:'color', l:'Mood color', t:'colors', opts:[['Sunny','#F2C94C'],['Calm','#8DB3CF'],['Fresh','#8DBA7A'],['Warm','#E59A6B'],['Grey','#A9A79D'],['Stormy','#6F6A8C']]},
+    {k:'triggers', l:'Mood triggers', t:'text', ph:'What affected your mood?'},
+    {k:'positive', l:'Positive moments of the day', t:'text', ph:'One good thing that happened…'},
+    {k:'lifted', l:'Activities that improved mood', t:'text', ph:'What lifted you up?'}]},
+  {id:'energy', name:'Energy Level', short:'Energy', emoji:'⚡', sub:'Track your fuel', fields:[
+    {k:'morning', l:'Morning energy', t:'scale', max:5, lo:'Low', hi:'High'},
+    {k:'afternoon', l:'Afternoon energy', t:'scale', max:5, lo:'Low', hi:'High'},
+    {k:'evening', l:'Evening energy', t:'scale', max:5, lo:'Low', hi:'High'},
+    {k:'boost', l:'Things that boost energy', t:'text', ph:'What gave you a lift?'},
+    {k:'drain', l:'Things that reduce energy', t:'text', ph:'What drained you?'},
+    {k:'reflection', l:'Daily energy reflection', t:'text', ph:'Notes on your energy today…'}]},
+  {id:'stress', name:'Stress Level', short:'Stress', emoji:'🌧️', sub:'Notice & release', fields:[
+    {k:'level', l:'Stress level', t:'scale', max:10, lo:'Calm', hi:'Tense'},
+    {k:'sources', l:'Stress sources', t:'multi', opts:['Exams','Assignments','Time','Social','Family','Health','Money','Future']},
+    {k:'signs', l:'Physical signs noticed', t:'multi', opts:['Headache','Tension','Fatigue','Restless','Stomach','Sleep issues']},
+    {k:'coping', l:'Coping methods used', t:'multi', opts:['Deep breathing','Break','Talked to someone','Music','Walk','Journaling']}]},
+  {id:'motivation', name:'Motivation', short:'Motivation', emoji:'🔥', sub:'Fuel your goals', fields:[
+    {k:'score', l:'Motivation score', t:'scale', max:10, lo:'Low', hi:'Fired up'},
+    {k:'goal', l:'Main goal of the day', t:'text', ph:'Today I want to…'},
+    {k:'reason', l:'Reason behind the goal', t:'text', ph:'Why it matters to me…'},
+    {k:'wins', l:'Small victories', t:'text', ph:'Wins big or small…'}]},
+  {id:'study', name:'Study Environment', short:'Study', emoji:'📚', sub:'Set the scene', fields:[
+    {k:'desk', l:'Desk organization', t:'stars'},
+    {k:'noise', l:'Noise level', t:'chips', opts:['Silent','Quiet','Moderate','Noisy']},
+    {k:'lighting', l:'Lighting quality', t:'stars'},
+    {k:'comfort', l:'Comfort level', t:'stars'},
+    {k:'phone', l:'Phone distraction check', t:'chips', opts:['Away','Silent','On desk','Kept checking']},
+    {k:'location', l:'Study location', t:'chips', opts:['Home','Library','Cafe','Class','Outdoors']},
+    {k:'notes', l:'Focus improvement notes', t:'text', ph:'What would improve your space?'}]},
+  {id:'distractions', name:'Distractions', emoji:'📱', sub:'Reclaim focus', fields:[
+    {k:'common', l:'Common distractions', t:'multi', opts:['Phone','Social media','Games','TV','People','Noise','Hunger','Fatigue']},
+    {k:'timeLost', l:'Time lost to distractions', t:'num', unit:'min', ph:'45'},
+    {k:'apps', l:'Apps / websites causing interruptions', t:'text', ph:'e.g. Instagram, YouTube…'},
+    {k:'strategies', l:'Strategies to regain focus', t:'text', ph:'What worked?'},
+    {k:'habits', l:'Better habits to replace them', t:'text', ph:'Next time I\'ll…'}]},
+  {id:'reflection', name:'Self-Reflection', short:'Self-Reflection', emoji:'📖', sub:'End your day', fields:[
+    {k:'accomplished', l:'What did I accomplish today?', t:'text', ph:'Today I…'},
+    {k:'learned', l:'What did I learn?', t:'text', ph:'I learned that…'},
+    {k:'challenged', l:'What challenged me?', t:'text', ph:'It was hard when…'},
+    {k:'improve', l:'What can I improve tomorrow?', t:'text', ph:'Tomorrow I\'ll…'},
+    {k:'message', l:'A positive message to myself', t:'text', ph:'Dear me, …'}]},
+];
+const INTENTIONS = [
+  "Small steps every day lead to big changes. You've got this. 🌱",
+  "You don't have to have it all figured out today. Just show up as you. 🌿",
+  "Bad days don't cancel out good progress. 💚",
+  "Rest counts. Taking a break is part of the plan. 🛋️",
+  "Comparison steals your sunshine. Grow at your own pace. 🌻",
+  "One task at a time. You're doing better than you think. ✨",
+  "Be the friend to yourself that you are to others. 🫶",
+  "Tiny wins still count as wins. Go collect a few. 🏆",
+  "Phone down, head up, breathe. 🍃",
+  "It's okay to ask for help. That's a strength, not a weakness. 🌤️",
+];
+const AVATAR_EMOJIS = ['🌸','🌻','🌷','🌿','🌵','🍄','🦋','🐝','🐱','🐶','🦊','🐼','🐰','🐢','🦄','🐧','🌙','⭐','🌈','🍓','🎧','🎨','📚','⚽'];
+const AVATAR_BGS = ['#DCE6D2','#F6DCCB','#F3E3A8','#D6E4F0','#E9D8EE','#F5D3D8','#7DA26A'];
+
+/* ---------- icons ---------- */
+const I = {
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+  right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+  pen:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>',
+  star:f=>`<svg viewBox="0 0 24 24" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>`,
+  drop:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/></svg>',
+  dropO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/></svg>',
+  leaf:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15"/><path d="M5 19l7-7"/></svg>',
+  sparkle:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></svg>',
+  save:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  upload:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9M7 14l5-5 5 5M5 4h14"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg>',
+  plusSq:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
+  shield:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>',
+};
+
+/* ---------- storage (this device only) ---------- */
+const K = { profile:'julia_profile', data:'julia_data', backup:'julia_last_backup', skip:'julia_install_skipped' };
+
+/* ---------- device / install detection ---------- */
+const UA = navigator.userAgent;
+const ENV = {
+  ios: /iPad|iPhone|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1),
+  chrome: /CriOS/.test(UA),
+  standalone: navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches),
+  embedded: (() => { try{ return window.self !== window.top; }catch(e){ return true; } })(),
+};
+ENV.device = /iPhone|iPod/.test(UA) ? 'iPhone' : ENV.ios ? 'iPad' : 'device';
+let installEvent = null;   // Android / desktop Chrome install prompt
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvent = e; if(!S.booting) render(true); });
+const canInstall = () => !ENV.standalone && !ENV.embedded && (ENV.ios || !!installEvent);
+let storageOK = true;
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ storageOK = false; return false; } },
+};
+function checkStorage(){
+  try{ localStorage.setItem('julia_probe','1'); localStorage.removeItem('julia_probe'); return true; }catch(e){ return false; }
+}
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayKey = () => keyOf(new Date());
+const fromKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); };
+const longDate = d => d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+const isFilled = v => Array.isArray(v) ? v.length>0 : v!==undefined && v!==null && v!=='' && v!==false;
+const initials = n => String(n||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase() || '🌱';
+const daysAgo = ts => Math.floor((Date.now() - ts) / 864e5);
+
+/* ---------- state ---------- */
+const S = {
+  booting: true, install: false, installBrowser: 'safari', profile: null, data: {entries:{}},
+  tab: 'today', wiz: null, histDay: todayKey(),
+  edit: null,            // profile editor draft {name, avatar, first}
+  insight: null, insightLoading: false,
+  restore: null,         // pending restore {data, days, exportedAt}
+  formErr: '',
+};
+const entry = k => S.data.entries[k] || {};
+const doneCount = k => TRACKERS.filter(t => entry(k)[t.id]?._done).length;
+const daysLogged = () => Object.keys(S.data.entries).filter(k => doneCount(k)).length;
+const saveData = () => LS.set(K.data, S.data);
+const saveProfile = () => LS.set(K.profile, S.profile);
+
+/* ---------- avatar ---------- */
+function avatarHTML(av, name, size){
+  av = av || {kind:'initials', bg:'#7DA26A'};
+  const bg = av.bg || '#7DA26A';
+  const st = `width:${size}px;height:${size}px;font-size:${Math.round(size*.42)}px;background:${esc(bg)};color:${bg==='#7DA26A'?'var(--on-accent)':'var(--text)'}`;
+  if(av.kind==='photo' && av.src) return `<span class="av" style="${st}"><img src="${esc(av.src)}" alt=""></span>`;
+  if(av.kind==='emoji') return `<span class="av" style="${st};font-size:${Math.round(size*.52)}px">${av.v}</span>`;
+  return `<span class="av" style="${st}">${esc(initials(name))}</span>`;
+}
+function resizePhoto(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const s = 256, c = document.createElement('canvas'); c.width = c.height = s;
+      const m = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, s, s);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+
+/* ---------- rendering ---------- */
+const app = document.getElementById('app');
+function render(keepScroll){
+  const sc = app.querySelector('.scroll');
+  const top = keepScroll && sc ? sc.scrollTop : 0;
+  if(S.booting) app.innerHTML = `<div class="loading"><div><div class="logo">🌿</div>Opening your garden…</div></div>`;
+  else if(S.install) app.innerHTML = installView();
+  else if(S.edit) app.innerHTML = profileEditView();
+  else if(S.wiz) app.innerHTML = wizardView();
+  else app.innerHTML = `<div class="scroll">${({today:todayView, trackers:trackersView, history:historyView, profile:profileView})[S.tab]()}</div>` + tabbar();
+  const nsc = app.querySelector('.scroll');
+  if(nsc) nsc.scrollTop = top;
+  if(!S.booting && !S.edit && !S.wiz && S.tab==='history' && !keepScroll){
+    const on = app.querySelector('.day.on'); if(on) on.scrollIntoView({inline:'center', block:'nearest'});
+  }
+}
+function toast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=msg;
+  app.appendChild(t); setTimeout(()=>t.remove(), 2500);
+}
+function tabbar(){
+  const tabs = [['today','Today',I.sun],['trackers','Trackers',I.grid],['history','History',I.cal],['profile','Profile',I.user]];
+  return `<nav class="tabbar">${tabs.map(([id,l,ic])=>`<button class="tab ${S.tab===id?'on':''}" data-tab="${id}">${ic}${l}</button>`).join('')}</nav>`;
+}
+
+/* install screen (first launch in a browser, and from the reminder banner) */
+function installView(){
+  const chrome = S.installBrowser === 'chrome';
+  const share = `<span class="ios-ico" aria-hidden="true">${I.share}</span>`;
+  const plus = `<span class="ios-ico" aria-hidden="true">${I.plusSq}</span>`;
+  const hasData = daysLogged() > 0;
+  const steps = !ENV.ios
+    ? `<button class="btn" data-act="nativeInstall" style="margin-top:18px">${I.plusSq} Install the app</button>`
+    : `<div class="seg" style="margin-top:20px">
+        <button class="${!chrome?'on':''}" data-browser="safari">I'm using Safari</button>
+        <button class="${chrome?'on':''}" data-browser="chrome">I'm using Chrome</button>
+      </div>
+      <ol class="steps">
+        <li><span>Tap the <b>Share</b> button ${share} ${chrome ? 'at the right end of the address bar.' : 'at the top of the screen, next to the address bar.'}</span></li>
+        <li><span>${chrome ? 'Tap' : 'Scroll down a little and tap'} <b>Add to Home Screen</b> ${plus}</span></li>
+        <li><span>Tap <b>Add</b>. Then close ${chrome ? 'Chrome' : 'Safari'} and open <b>Julia's Garden</b> 🌱 from your Home Screen.</span></li>
+      </ol>`;
+  return `<div class="scroll">
+    <div class="install-hero"><img src="icons/icon-192.png" alt="" onerror="this.parentNode.innerHTML='<div class=&quot;logo&quot; style=&quot;width:96px;height:96px;font-size:48px&quot;>🌱</div>'"></div>
+    <h1 style="margin-top:20px">Plant your garden on your ${ENV.device} 🌱</h1>
+    <p class="muted" style="margin:8px 0 0">Before you start, give ${esc(APP_NAME)} its own spot on your Home Screen. It takes about 10 seconds.</p>
+    <div class="why"><b>Why this matters:</b> everything you write is saved privately on this ${ENV.device}, not on the internet. As a Home Screen app, your garden is protected. Left in a browser tab, it can get swept away when the browser tidies up. Your future self will thank you! 💚</div>
+    ${steps}
+    <div class="tip"><span style="font-size:22px">🎮</span><span><b>Pro tip: save points!</b> Every week or so, tap <b>Save backup</b> in your Profile and save the file to Files or iCloud Drive. It's like a save point in a game. If anything ever happens to your ${ENV.device}, you can restore everything.</span></div>
+    ${hasData ? `<div class="banner" style="margin-top:14px">You already have entries in this browser. Save a backup now, then use <b>Restore</b> in the Home Screen app to bring them along.</div>
+      <button class="btn btn-line" data-act="backup">${I.save} Save backup first</button>` : ''}
+    <button class="skip" data-act="skipInstall">${S.profile ? 'Back to my garden' : "Skip for now (I'll do it later)"}</button>
+  </div>`;
+}
+
+/* profile editor (also the first-run welcome) */
+function profileEditView(){
+  const d = S.edit, av = d.avatar;
+  const kind = av.kind;
+  return `<div class="scroll">
+    ${d.first ? `<div class="logo">🌱</div><h1 style="margin-top:18px">Welcome to ${esc(APP_NAME)}</h1>
+      <p class="muted" style="margin:6px 0 4px">A quiet space to check in with yourself each day: sleep, mood, energy, study and more. Everything you write stays on this device.</p>`
+      : `<div style="display:flex;justify-content:space-between;align-items:center"><h1>Edit profile</h1><button data-act="cancelEdit" aria-label="Close" style="width:30px;height:30px;color:var(--muted)">${I.x}</button></div>`}
+    <div class="preview">${avatarHTML(av, d.name, 92)}<b>${esc(d.name || 'Your name')}</b></div>
+    <div class="field"><label for="pname">What should we call you?</label><input class="input" id="pname" data-pk="name" value="${esc(d.name)}" maxlength="40" autocomplete="given-name" placeholder="Your name"></div>
+    <div class="field"><span class="ql">Avatar</span>
+      <div class="seg" role="tablist">
+        <button class="${kind==='emoji'?'on':''}" data-avkind="emoji">Emoji</button>
+        <button class="${kind==='initials'?'on':''}" data-avkind="initials">Initials</button>
+        <button class="${kind==='photo'?'on':''}" data-avkind="photo">Photo</button>
+      </div>
+    </div>
+    ${kind==='emoji' ? `<div class="av-grid" style="margin-top:14px">${AVATAR_EMOJIS.map(e=>`<button class="av-opt ${av.v===e?'on':''}" data-avemoji="${e}" aria-label="Avatar ${e}">${e}</button>`).join('')}</div>` : ''}
+    ${kind==='photo' ? `<button class="btn btn-line" data-act="pickPhoto" style="margin-top:14px">${I.upload} ${av.src ? 'Choose a different photo' : 'Choose a photo'}</button>
+      <div class="muted small" style="margin-top:8px">The photo stays on this device.</div>` : ''}
+    ${kind!=='photo' ? `<div class="field"><span class="ql">Background</span><div class="bg-opts">${AVATAR_BGS.map(c=>`<button class="bg-opt ${av.bg===c?'on':''}" style="background:${c}" data-avbg="${c}" aria-label="Background colour"></button>`).join('')}</div></div>` : ''}
+    <div class="err">${esc(S.formErr)}</div>
+    <button class="btn" data-act="saveProfile" style="margin-top:4px">${d.first ? "Let's grow 🌿" : 'Save'}</button>
+    ${d.first ? `<button class="btn btn-line" data-act="pickRestore" style="margin-top:10px">${I.upload} I have a backup file</button>` : ''}
+  </div>`;
+}
+
+/* today */
+function backupNudge(){
+  if(daysLogged() < 3) return '';
+  const last = LS.get(K.backup, null);
+  if(last && daysAgo(last) < 7) return '';
+  return `<button class="banner soft" data-act="goBackup">${last ? `Your last backup was ${daysAgo(last)} days ago.` : "You haven't saved a backup yet."} Tap to save one so your entries are safe.</button>`;
+}
+function todayView(){
+  const h = new Date().getHours();
+  const greet = h<12 ? 'Good morning,' : h<18 ? 'Good afternoon,' : 'Good evening,';
+  const first = (S.profile.name||'').split(' ')[0];
+  const k = todayKey(), n = doneCount(k);
+  const dayIdx = Math.floor(fromKey(k).getTime()/864e5) % INTENTIONS.length;
+  const cta = n===0 ? 'Start Daily Check-in' : n<10 ? 'Continue Daily Check-in' : 'Review Daily Check-in';
+  return `${storageOK ? '' : `<div class="banner">This browser isn't saving data (private browsing?). Your entries will be lost when you close it.</div>`}
+    ${canInstall() ? `<button class="banner soft" data-act="showInstall">📲 <b>Add ${esc(APP_NAME)} to your Home Screen</b> to keep your entries safe. Tap to see how.</button>` : backupNudge()}
+    <div class="hello"><div style="flex:1;min-width:0"><div class="greet">${greet}</div><h1>${esc(first)} 🌿</h1>
+      <div class="muted small" style="margin-top:2px">${longDate(new Date())}</div></div>
+      <button data-tab="profile" aria-label="Profile">${avatarHTML(S.profile.avatar, S.profile.name, 52)}</button></div>
+    <div class="hero">${I.leaf}<p>${INTENTIONS[dayIdx]}</p><small>TODAY'S INTENTION</small></div>
+    <div class="sec-head"><h2>Today's Check-ins</h2><span class="count">${n}/10</span></div>
+    <div class="grid2">${TRACKERS.map(t=>{
+      const d = entry(k)[t.id]?._done;
+      return `<button class="chip-done ${d?'done':''}" data-open="${t.id}"><span>${t.emoji}</span><span class="nm">${t.short||t.name}</span><span class="ck">${d?I.check:''}</span></button>`;
+    }).join('')}</div>
+    <button class="btn" data-act="startFlow" style="margin-top:20px">${I.pen} ${cta}</button>`;
+}
+
+/* trackers */
+function trackersView(){
+  const e = entry(todayKey());
+  return `<h1>Trackers</h1><div class="muted" style="margin-top:4px">Tap any area to log it for today.</div>
+    <div class="tlist">${TRACKERS.map(t=>`
+      <button class="trow" data-open="${t.id}">
+        <span class="ticon">${t.emoji}</span>
+        <span><div class="t">${t.name}</div><div class="s">${t.sub}</div></span>
+        <span class="chev">${e[t.id]?._done?'<span class="badge">Logged</span>':''}${I.chev}</span>
+      </button>`).join('')}</div>`;
+}
+
+/* history */
+function fmtVal(f, v){
+  if(f.t==='stars') return '★'.repeat(v) + '☆'.repeat(5-v);
+  if(f.t==='scale') return `${v} / ${f.max}`;
+  if(f.t==='glasses') return `${v} of ${f.max} glasses`;
+  if(f.t==='num') return `${v} ${f.unit}`;
+  if(f.t==='check') return v ? '✓ ' + f.text : '';
+  if(Array.isArray(v)) return v.join(', ');
+  return v;
+}
+function historyView(){
+  const days = [];
+  for(let i=29;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d); }
+  const sel = S.histDay, e = entry(sel);
+  const logged = TRACKERS.filter(t => e[t.id]?._done);
+  return `<h1>History</h1><div class="muted" style="margin-top:4px">Look back at how you were feeling.</div>
+    <div class="strip">${days.map(d=>{ const k=keyOf(d); return `<button class="day ${k===sel?'on':''}" data-day="${k}"><small>${d.toLocaleDateString('en-GB',{weekday:'short'})}</small><b>${d.getDate()}</b>${doneCount(k)?'<span class="dot"></span>':''}</button>`; }).join('')}</div>
+    <h2 style="margin-top:18px;font-size:17px">${longDate(fromKey(sel))}</h2>
+    ${logged.length ? logged.map(t=>{
+      const v = e[t.id];
+      const rows = t.fields.filter(f=>isFilled(v[f.k])).map(f=>`<div class="kv"><small>${f.l}</small><div>${esc(fmtVal(f, v[f.k]))}</div></div>`).join('');
+      return `<div class="hcard"><div class="hd"><span class="ticon">${t.emoji}</span>${t.name}</div>${rows || '<div class="muted small">Marked complete</div>'}</div>`;
+    }).join('') : `
+      <div class="empty">
+        <div class="art"><svg width="70" height="70" viewBox="0 0 64 64" fill="none" stroke="#9AAA88" stroke-width="2" stroke-linecap="round"><path d="M32 58V20"/><path d="M32 30c-8 0-14-6-14-14 8 0 14 6 14 14zM32 40c8 0 14-6 14-14-8 0-14 6-14 14zM32 50c-7 0-12-5-12-12 7 0 12 5 12 12z" fill="#DCE6D2"/></svg></div>
+        <h2>Nothing logged yet</h2>
+        <p class="muted small" style="margin-top:6px">No check-in for this day. Your journey grows one entry at a time. 🌱</p>
+      </div>`}`;
+}
+
+/* profile */
+function streak(){
+  let s=0; const d=new Date();
+  if(!doneCount(keyOf(d))) d.setDate(d.getDate()-1);
+  while(doneCount(keyOf(d))){ s++; d.setDate(d.getDate()-1); }
+  return s;
+}
+function profileView(){
+  const last = LS.get(K.backup, null);
+  const lastTxt = !last ? 'No backup saved yet.' : daysAgo(last)===0 ? 'Last backup: today.' : `Last backup: ${daysAgo(last)} day${daysAgo(last)===1?'':'s'} ago.`;
+  const r = S.restore;
+  return `<h1>Profile</h1>
+    <div class="pcard" style="margin-top:16px">${avatarHTML(S.profile.avatar, S.profile.name, 76)}
+      <div style="font-weight:800;font-size:18px">${esc(S.profile.name)}</div>
+      <button class="link" data-act="editProfile">Edit name & avatar</button></div>
+    <div class="stats"><div class="stat"><b>${streak()}</b><span class="muted small">Day streak</span></div><div class="stat"><b>${daysLogged()}</b><span class="muted small">Days logged</span></div></div>
+
+    <div class="panel insight">
+      <h3>${I.leaf} Reflection Insight</h3>
+      <div class="muted small">Get a gentle note based on today's journal.</div>
+      ${S.insight ? `<div class="note" id="insightNote">${esc(S.insight)}</div>` : ''}
+      <button class="btn" data-act="insight" style="margin-top:14px" ${S.insightLoading?'disabled':''}>${S.insightLoading?'<span class="spin"></span>':I.sparkle} Get my insight</button>
+    </div>
+
+    <div class="panel" id="backup">
+      <h3>${I.shield} Backup</h3>
+      <div class="muted small">Your entries live only on this device. Save a backup file now and then (to Files or iCloud Drive) so nothing gets lost.</div>
+      <div class="small" style="margin-top:8px;font-weight:600">${lastTxt}</div>
+      <div class="row2" style="margin-top:14px">
+        <button class="btn" data-act="backup">${I.save} Save backup</button>
+        <button class="btn btn-line" data-act="pickRestore">${I.upload} Restore</button>
+      </div>
+      ${r ? `<div class="confirm"><b>Replace everything on this device?</b><br>
+        This backup from ${new Date(r.exportedAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} has ${r.days} day${r.days===1?'':'s'} of check-ins. Your current entries will be replaced.
+        <div class="row2" style="margin-top:12px"><button class="btn btn-danger" data-act="confirmRestore">Replace</button><button class="btn btn-line" data-act="cancelRestore">Cancel</button></div></div>` : ''}
+    </div>`;
+}
+
+/* reflection insight */
+function makeInsight(){
+  const e = entry(todayKey()), out = [];
+  const n = doneCount(todayKey());
+  if(!n) return "You haven't checked in yet today. Take two quiet minutes for yourself. Even one tracker is a kind start. 🌱";
+  const sl = e.sleep, mo = e.mood, st = e.stress, wa = e.water, en = e.energy, mv = e.motivation, rf = e.reflection, ex = e.exercise, di = e.distractions;
+  if(sl?.hours){ const h=+sl.hours; out.push(h<6 ? `You slept about ${h} hours. That's on the short side, so be extra patient with yourself today.` : h>=7 ? `${h} hours of sleep is a solid foundation. Your body thanks you.` : `${h} hours of sleep. A little more rest tonight could lift tomorrow.`); }
+  if(mo?.rating){ const r=+mo.rating; out.push(r>=7 ? `Your mood is at ${r}/10. Notice what's working and hold onto it.` : r<=4 ? `Your mood is lower today (${r}/10). That's okay. Heavy days pass, and you showed up anyway. If it keeps feeling heavy, talking to someone you trust really helps.` : `Your mood is steady at ${r}/10.`); }
+  if(mo?.positive) out.push(`You noticed a good moment: “${mo.positive.slice(0,90)}”. Savour it.`);
+  if(st?.level && +st.level>=7) out.push(`Stress is high (${st.level}/10)${st.sources?.length?`, mostly from ${st.sources.slice(0,2).join(' and ').toLowerCase()}`:''}. ${st.coping?.length?`You already reached for ${st.coping[0].toLowerCase()}. Keep using it.`:'Try a short walk or a few slow breaths before your next task.'}`);
+  else if(st?.level) out.push(`Stress feels manageable at ${st.level}/10.`);
+  if(wa?.glasses!==undefined){ const g=+wa.glasses; out.push(g>=6 ? `Great hydration: ${g} glasses!` : `Only ${g} glasses of water so far. A refill might help your focus.`); }
+  if(en?.morning && en?.afternoon && +en.afternoon < +en.morning) out.push('Your energy dipped in the afternoon. A short break or snack around then could help.');
+  if(ex?.type?.length && !ex.type.includes('Rest day')) out.push(`Nice work moving your body (${ex.type.join(', ').toLowerCase()}).`);
+  if(di?.timeLost && +di.timeLost>=60) out.push(`About ${di.timeLost} minutes went to distractions. Putting your phone in another room for one study block is a small, powerful experiment.`);
+  if(mv?.goal) out.push(`Remember your goal: “${mv.goal.slice(0,80)}”.`);
+  if(rf?.accomplished) out.push(`You accomplished: “${rf.accomplished.slice(0,80)}”. That counts.`);
+  if(n<10) out.push(`You've completed ${n} of 10 check-ins today.`);
+  else out.push('You completed all 10 check-ins today. That kind of self-awareness is a real strength. 🌿');
+  return out.slice(0,5).join(' ');
+}
+
+/* wizard */
+function wizardView(){
+  const w = S.wiz, t = TRACKERS[w.idx], single = w.mode==='single';
+  const pct = single ? 100 : ((w.idx+1)/10)*100;
+  const last = single || w.idx===9;
+  return `<div class="wiz-top"><div class="row"><span class="muted small" style="font-weight:600">${single ? t.name : `Step ${w.idx+1} of 10`}</span><button data-act="closeWiz" aria-label="Close" style="width:28px;height:28px;color:var(--muted)">${I.x}</button></div><div class="bar"><i style="width:${pct}%"></i></div></div>
+  <div class="scroll" style="padding-top:12px">
+    <div class="wiz-icon">${t.emoji}</div>
+    <h1 style="margin-top:14px;font-size:26px">${t.name}</h1>
+    <div class="muted">${t.sub}</div>
+    ${t.fields.map(f=>fieldView(f, w.draft[f.k])).join('')}
+  </div>
+  <div class="wiz-foot">
+    ${(!single && w.idx>0) ? `<button class="icon-btn" data-act="prev" aria-label="Back">${I.left}</button>` : ''}
+    <button class="btn" data-act="next">${last ? `${I.check} ${single?'Save':'Complete Check-in'}` : `${I.right} Next`}</button>
+  </div>`;
+}
+function fieldView(f, v){
+  const k = f.k, id = 'f_' + k;
+  const L = `<label class="ql" for="${id}">${f.l}</label>`, LS_ = `<span class="ql">${f.l}</span>`;
+  switch(f.t){
+    case 'time': return `<div class="q">${L}<input class="input" id="${id}" type="time" data-k="${k}" value="${esc(v||'')}"></div>`;
+    case 'num': return `<div class="q">${L}<div class="with-unit"><input class="input" id="${id}" type="number" inputmode="decimal" min="0" data-k="${k}" value="${esc(v??'')}" placeholder="${f.ph||''}"><span>${f.unit}</span></div></div>`;
+    case 'text': return `<div class="q">${L}<textarea class="input" id="${id}" data-k="${k}" placeholder="${esc(f.ph||'')}">${esc(v||'')}</textarea></div>`;
+    case 'stars': return `<div class="q">${LS_}<div class="stars">${[1,2,3,4,5].map(i=>`<button data-set="${k}" data-v="${i}" aria-label="${i} stars">${I.star(v>=i)}</button>`).join('')}</div></div>`;
+    case 'scale': return `<div class="q">${LS_}<div class="scale">${Array.from({length:f.max},(_,i)=>i+1).map(i=>`<button class="${v==i?'on':''}" data-set="${k}" data-v="${i}">${i}</button>`).join('')}</div><div class="lohi"><span>${f.lo}</span><span>${f.hi}</span></div></div>`;
+    case 'chips': return `<div class="q">${LS_}<div class="chips">${f.opts.map(o=>`<button class="chip ${v===o?'on':''}" data-set="${k}" data-v="${esc(o)}">${o}</button>`).join('')}</div></div>`;
+    case 'multi': return `<div class="q">${LS_}<div class="chips">${f.opts.map(o=>`<button class="chip ${(v||[]).includes(o)?'on':''}" data-tog="${k}" data-v="${esc(o)}">${o}</button>`).join('')}</div></div>`;
+    case 'checklist': return `<div class="q">${LS_}${f.opts.map(o=>{const on=(v||[]).includes(o);return `<button class="check ${on?'on':''}" data-tog="${k}" data-v="${esc(o)}"><span class="box">${on?I.check:''}</span>${o}</button>`;}).join('')}</div>`;
+    case 'check': return `<div class="q">${LS_}<button class="check ${v?'on':''}" data-flip="${k}"><span class="box">${v?I.check:''}</span>${f.text}</button></div>`;
+    case 'colors': return `<div class="q">${LS_}<div class="chips" style="gap:12px">${f.opts.map(([n,c])=>`<button class="swatch ${v===n?'on':''}" style="background:${c}" data-set="${k}" data-v="${n}" title="${n}" aria-label="${n}"></button>`).join('')}</div>${v?`<div class="muted small" style="margin-top:8px">${esc(v)}</div>`:''}</div>`;
+    case 'glasses': { const g=+(v||0); return `<div class="q">${LS_}<div class="glass"><button class="icon-btn" data-glass="-1" aria-label="One glass less">−</button><button class="icon-btn" data-glass="1" aria-label="One glass more" style="background:var(--green-soft)">+</button><div class="num">${g}<small>of ${f.max} glasses</small></div></div><div class="wbar"><i style="width:${Math.min(100,g/f.max*100)}%"></i></div><div class="drops">${Array.from({length:f.max},(_,i)=>`<span class="${i<g?'f':''}">${i<g?I.drop:I.dropO}</span>`).join('')}</div></div>`; }
+  }
+  return '';
+}
+function openWizard(idx, mode){
+  const t = TRACKERS[idx];
+  const cur = entry(todayKey())[t.id] || {};
+  S.wiz = {idx, mode, draft: JSON.parse(JSON.stringify(cur))};
+  delete S.wiz.draft._done; delete S.wiz.draft._at;
+  render();
+}
+function commitStep(){
+  const w = S.wiz, t = TRACKERS[w.idx], k = todayKey();
+  const filled = t.fields.some(f => isFilled(w.draft[f.k]));
+  const e = S.data.entries[k] || (S.data.entries[k] = {});
+  if(filled) e[t.id] = {...w.draft, _done:true, _at: e[t.id]?._at || Date.now()};
+  else delete e[t.id];
+  if(!Object.keys(e).length) delete S.data.entries[k];
+  saveData();
+}
+
+/* ---------- backup & restore ---------- */
+async function doBackup(){
+  const payload = {app:'julias-garden', version:1, exportedAt:new Date().toISOString(), profile:S.profile, data:S.data};
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `julias-garden-backup-${todayKey()}.json`;
+  const blob = new Blob([json], {type:'application/json'});
+  let ok = false;
+  const dl = window.claude?.use ? await window.claude.use('downloads') : null;
+  if(dl){
+    try{ await dl.save({filename, data: blob}); ok = true; }
+    catch(err){ if(err?.code === 'declined') return; }
+  }
+  if(!ok){
+    const file = new File([blob], filename, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]}) && /iPad|iPhone|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document){
+      try{ await navigator.share({files:[file], title:"Julia's Garden backup"}); ok = true; }
+      catch(err){ if(err?.name === 'AbortError') return; }
+    }
+  }
+  if(!ok){
+    try{
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000); ok = true;
+    }catch(err){}
+  }
+  if(ok){ LS.set(K.backup, Date.now()); render(true); toast('Backup saved 🌿'); }
+  else toast("Couldn't save the backup here");
+}
+function readRestoreFile(file){
+  const fr = new FileReader();
+  fr.onload = () => {
+    try{
+      const p = JSON.parse(fr.result);
+      if(p.app !== 'julias-garden' || !p.data || typeof p.data.entries !== 'object') throw new Error('not ours');
+      const days = Object.keys(p.data.entries).length;
+      S.restore = {payload:p, days, exportedAt:p.exportedAt || Date.now()};
+      if(S.edit?.first){ applyRestore(); return; }
+      S.tab = 'profile'; render(true);
+      document.getElementById('backup')?.scrollIntoView({block:'center'});
+    }catch(err){ toast("That file isn't a Julia's Garden backup"); }
+  };
+  fr.readAsText(file);
+}
+function applyRestore(){
+  const p = S.restore.payload;
+  S.data = {entries: p.data.entries || {}};
+  if(p.profile?.name) S.profile = p.profile;
+  else if(!S.profile) S.profile = {name:'Julia', avatar:{kind:'emoji', v:'🌸', bg:'#DCE6D2'}};
+  saveData(); saveProfile(); LS.set(K.backup, Date.now());
+  S.restore = null; S.edit = null; S.insight = null; S.tab = 'today';
+  render(); toast('Backup restored 🌿');
+}
+
+/* ---------- events ---------- */
+const restoreInput = document.getElementById('restoreFile');
+const photoInput = document.getElementById('photoFile');
+restoreInput.addEventListener('change', () => { const f = restoreInput.files[0]; restoreInput.value=''; if(f) readRestoreFile(f); });
+photoInput.addEventListener('change', async () => {
+  const f = photoInput.files[0]; photoInput.value='';
+  if(!f || !S.edit) return;
+  try{ S.edit.avatar = {kind:'photo', src: await resizePhoto(f), bg:S.edit.avatar.bg}; render(true); }
+  catch(err){ toast("That photo couldn't be opened"); }
+});
+
+app.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const d = b.dataset;
+  if(d.tab){ S.tab = d.tab; render(); return; }
+  if(d.open){ openWizard(TRACKERS.findIndex(t=>t.id===d.open), 'single'); return; }
+  if(d.day){ S.histDay = d.day; render(true); return; }
+  if(d.browser){ S.installBrowser = d.browser; render(true); return; }
+  if(S.edit){
+    const av = S.edit.avatar;
+    if(d.avkind){
+      if(d.avkind==='photo'){ if(av.kind!=='photo'){ S.edit.avatar = {kind:'photo', src:S.edit.lastPhoto||null, bg:av.bg}; } render(true); if(!S.edit.avatar.src) photoInput.click(); return; }
+      if(av.kind==='photo' && av.src) S.edit.lastPhoto = av.src;
+      S.edit.avatar = {kind:d.avkind, v: d.avkind==='emoji' ? (av.v || S.edit.lastEmoji || AVATAR_EMOJIS[0]) : undefined, bg: av.bg || AVATAR_BGS[0]};
+      render(true); return;
+    }
+    if(d.avemoji){ S.edit.avatar = {...av, kind:'emoji', v:d.avemoji}; S.edit.lastEmoji = d.avemoji; render(true); return; }
+    if(d.avbg){ S.edit.avatar = {...av, bg:d.avbg}; render(true); return; }
+  }
+  if(S.wiz){
+    const dr = S.wiz.draft;
+    if(d.set){ const f = TRACKERS[S.wiz.idx].fields.find(x=>x.k===d.set); const val = ['stars','scale'].includes(f.t) ? +d.v : d.v; dr[d.set] = dr[d.set]===val ? undefined : val; render(true); return; }
+    if(d.tog){ const a = dr[d.tog] || []; dr[d.tog] = a.includes(d.v) ? a.filter(x=>x!==d.v) : [...a, d.v]; render(true); return; }
+    if(d.flip){ dr[d.flip] = !dr[d.flip]; render(true); return; }
+    if(d.glass){ dr.glasses = Math.max(0, Math.min(8, (+dr.glasses||0) + +d.glass)); render(true); return; }
+  }
+  switch(d.act){
+    case 'startFlow': {
+      const e2 = entry(todayKey());
+      let i = TRACKERS.findIndex(t => !e2[t.id]?._done); if(i<0) i=0;
+      openWizard(i, 'flow'); break;
+    }
+    case 'closeWiz': S.wiz = null; render(); break;
+    case 'prev': commitStep(); openWizard(S.wiz.idx-1, 'flow'); break;
+    case 'next': {
+      commitStep();
+      if(S.wiz.mode==='single'){ const nm = TRACKERS[S.wiz.idx].name; S.wiz=null; render(); toast(`${nm} saved`); }
+      else if(S.wiz.idx<9) openWizard(S.wiz.idx+1, 'flow');
+      else { S.wiz=null; S.tab='today'; render(); toast(`Check-in complete · ${doneCount(todayKey())}/10 🌿`); }
+      break;
+    }
+    case 'insight':
+      S.insightLoading = true; render(true);
+      setTimeout(() => { S.insight = makeInsight(); S.insightLoading=false; render(true); }, 600);
+      break;
+    case 'showInstall': S.install = true; render(); break;
+    case 'skipInstall':
+      LS.set(K.skip, Date.now()); S.install = false;
+      if(!S.profile) S.edit = {name:'Julia', avatar:{kind:'emoji', v:'🌸', bg:AVATAR_BGS[0]}, first:true};
+      render(); break;
+    case 'nativeInstall':
+      if(installEvent){ installEvent.prompt(); installEvent.userChoice.finally(() => { installEvent = null; S.install = false; render(); }); }
+      break;
+    case 'editProfile': S.formErr=''; S.edit = {name:S.profile.name, avatar:{...S.profile.avatar}, first:false}; render(); break;
+    case 'cancelEdit': S.edit = null; render(); break;
+    case 'pickPhoto': photoInput.click(); break;
+    case 'saveProfile': {
+      const name = (S.edit.name||'').trim();
+      if(!name){ S.formErr = 'Please enter a name.'; render(true); return; }
+      const avatar = S.edit.avatar.kind==='photo' && !S.edit.avatar.src ? {kind:'initials', bg:S.edit.avatar.bg||AVATAR_BGS[0]} : S.edit.avatar;
+      const first = S.edit.first;
+      S.profile = {...(S.profile||{}), name, avatar, created: S.profile?.created || Date.now()};
+      saveProfile(); S.edit = null; S.formErr = ''; render();
+      toast(first ? `Welcome, ${name.split(' ')[0]} 🌱` : 'Profile saved');
+      break;
+    }
+    case 'goBackup': S.tab='profile'; render(); document.getElementById('backup')?.scrollIntoView({block:'center'}); break;
+    case 'backup': doBackup(); break;
+    case 'pickRestore': restoreInput.click(); break;
+    case 'confirmRestore': applyRestore(); break;
+    case 'cancelRestore': S.restore = null; render(true); break;
+  }
+});
+app.addEventListener('input', e => {
+  const k = e.target.dataset.k;
+  if(k && S.wiz) S.wiz.draft[k] = e.target.value;
+  if(e.target.dataset.pk && S.edit){
+    S.edit.name = e.target.value;
+    const pv = app.querySelector('.preview b'); if(pv) pv.textContent = S.edit.name || 'Your name';
+    if(S.edit.avatar.kind==='initials'){ const a = app.querySelector('.preview .av'); if(a) a.textContent = initials(S.edit.name); }
+  }
+});
+
+/* ---------- boot ---------- */
+(function boot(){
+  storageOK = checkStorage();
+  try{ navigator.storage?.persist?.().catch(()=>{}); }catch(e){}
+  S.profile = LS.get(K.profile, null);
+  S.data = LS.get(K.data, {entries:{}});
+  if(!S.data || typeof S.data.entries !== 'object') S.data = {entries:{}};
+  S.installBrowser = ENV.chrome ? 'chrome' : 'safari';
+  if(!S.profile){
+    if(ENV.ios && canInstall() && !LS.get(K.skip, null)) S.install = true;
+    else S.edit = {name:'Julia', avatar:{kind:'emoji', v:'🌸', bg:AVATAR_BGS[0]}, first:true};
+  }
+  S.booting = false;
+  render();
+  if('serviceWorker' in navigator && location.protocol === 'https:' && !ENV.embedded){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>
